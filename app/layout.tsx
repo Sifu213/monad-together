@@ -38,7 +38,7 @@ export default function RootLayout({
         <meta charSet="UTF-8" />
         <link rel="icon" href="/bombandaks.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Bombandak</title>
+        <title>Monad Together</title>
         <meta property="og:title" content="Monad Together" />
         <meta property="og:description" content="Complete the Monad tiles withe the community!" />
         <meta property="og:image" content="/img/bombandakcover.jpg" />
