@@ -36,17 +36,17 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         <meta charSet="UTF-8" />
-        <link rel="icon" href="/bombandaks.png" />
+        <link rel="icon" href="/img/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Monad Together</title>
         <meta property="og:title" content="Monad Together" />
-        <meta property="og:description" content="Complete the Monad tiles withe the community!" />
-        <meta property="og:image" content="/img/bombandakcover.jpg" />
+        <meta property="og:description" content="Complete the Monad tiles with the community!" />
+        <meta property="og:image" content="/img/Monad_together.jpg" />
         <meta property="og:url" content="" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Monad Together" />
-        <meta name="twitter:description" content="Complete the Monad tiles withe the community!" />
-        <meta name="twitter:image" content="/img/bombandakcover.jpg" />
+        <meta name="twitter:description" content="Complete the Monad tiles with the community!" />
+        <meta name="twitter:image" content="/img/Monad_together.jpg" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

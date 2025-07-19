@@ -235,9 +235,9 @@ export default function MonadTilesGame() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-background relative"> 
+        <div className="h-screen flex flex-col bg-background relative">
             {Object.entries(allCursors).map(([cursorUserId, cursor]) => {
-                if (!cursor || cursorUserId === myUserId) return null; 
+                if (!cursor || cursorUserId === myUserId) return null;
 
                 return (
                     <div
@@ -265,11 +265,16 @@ export default function MonadTilesGame() {
                     <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center space-x-2 sm:space-x-3">
                             <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg gradient-primary flex items-center justify-center"></div>
-                            <div>
-                                <h1 className="text-lg sm:text-xl font-bold text-gradient">
-                                    Monad Together
-                                </h1>
-                            </div>
+
+                            <h1 className="text-lg sm:text-xl font-bold text-gradient flex items-center">
+                                <img
+                                    src="/img/Monad_Together.png"
+                                    alt="Monad Together"
+                                    className="w-12 h-auto max-h-12 object-contain"
+                                />
+                                Monad Together
+                            </h1>
+
                         </div>
                         <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
                             <ConnectedUsersDisplay />
@@ -281,17 +286,12 @@ export default function MonadTilesGame() {
                                     className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200 text-sm"
                                 >
                                     <span className="hidden sm:inline">Chat</span>
-                                    <span className="sm:hidden">💬</span>
-                                    {chatMessages.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                                            {chatMessages.length}
-                                        </span>
-                                    )}
+                                    
                                 </button>
                             )}
 
-                           
-                       
+
+
                             <ConnectButton.Custom>
                                 {({
                                     account,
@@ -331,7 +331,7 @@ export default function MonadTilesGame() {
 
                                                 return (
                                                     <div className="flex items-center space-x-1 sm:space-x-2">
-                                                        
+
 
                                                         <button
                                                             onClick={openAccountModal}
@@ -385,7 +385,7 @@ export default function MonadTilesGame() {
                                         onClick={handleUsernameSubmit}
                                         disabled={!tempUsername.trim()}
                                         className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold text-sm sm:text-base"
-                                        
+
                                     >
                                         Join Game
                                     </button>
@@ -417,7 +417,7 @@ export default function MonadTilesGame() {
                     <div className="flex flex-col md:flex-row gap-4 md:gap-8 lg:gap-12 items-center justify-center px-2 overflow-x-auto">
                         {Object.entries(LETTER_PATTERNS).map(([letter, pattern], letterIndex) => (
                             <div key={letter} className="flex flex-col items-center flex-shrink-0">
-                                
+
                                 <div className="flex flex-col gap-0.5 sm:gap-1">
                                     {pattern.map((row, rowIndex) => (
                                         <div key={rowIndex} className="flex gap-0.5 sm:gap-1">
@@ -463,7 +463,7 @@ export default function MonadTilesGame() {
                     {/* Popup de victoire */}
                     {showVictoryPopup && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                            <div 
+                            <div
                                 className="bg-[#836EF9] rounded-lg p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 w-full"
                                 onClick={(e) => e.stopPropagation()}
                             >
@@ -472,7 +472,7 @@ export default function MonadTilesGame() {
                                     Congratulations! You successfully flipped all tiles and maintained them for 60 seconds!
                                 </p>
 
-                                <div 
+                                <div
                                     className="space-y-4 mb-6"
                                     onClick={(e) => e.stopPropagation()}
                                 >
@@ -536,8 +536,8 @@ export default function MonadTilesGame() {
                                 return (
                                     <div key={msg.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-xs sm:max-w-sm lg:max-w-md px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm ${isMyMessage
-                                                ? 'bg-green-600 text-white'
-                                                : 'bg-gray-700 text-white'
+                                            ? 'bg-green-600 text-white'
+                                            : 'bg-gray-700 text-white'
                                             }`}>
                                             {!isMyMessage && (
                                                 <div className="text-blue-400 font-medium text-xs mb-1">
