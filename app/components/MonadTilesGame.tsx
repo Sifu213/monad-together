@@ -1,7 +1,7 @@
 "use client";
 
 import { useStateTogether, ChatMessage, useConnectedUsers, useCursors } from "react-together";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect } from 'wagmi';
 import NFTMintButton from './NFTMintButton';
@@ -78,6 +78,9 @@ export default function MonadTilesGame() {
     const [tempUsername, setTempUsername] = useState('');
     const [chatOpen, setChatOpen] = useState(false);
 
+    // Ref pour le scroll automatique du chat
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
     const connectedUsers = useConnectedUsers();
     const { myCursor, allCursors } = useCursors({
         deleteOnLeave: true,
@@ -86,6 +89,24 @@ export default function MonadTilesGame() {
     });
 
     const myUserId = connectedUsers.find(user => user.isYou)?.userId || 'unknown';
+
+    // Fonction pour scroller vers le bas
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    // Scroller vers le bas quand les messages changent
+    useEffect(() => {
+        scrollToBottom();
+    }, [chatMessages]);
+
+    // Scroller vers le bas quand le chat s'ouvre
+    useEffect(() => {
+        if (chatOpen) {
+            // Délai pour laisser le temps au chat de s'afficher
+            setTimeout(scrollToBottom, 100);
+        }
+    }, [chatOpen]);
 
     // Synchroniser l'adresse wallet avec l'utilisateur
     useEffect(() => {
@@ -242,26 +263,28 @@ export default function MonadTilesGame() {
 
             {/* Header */}
             <nav className="relative z-10 glass bg-[#200052]">
-                <div className="container mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center"></div>
+                <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg gradient-primary flex items-center justify-center"></div>
                             <div>
-                                <h1 className="text-xl font-bold text-gradient">
+                                <h1 className="text-lg sm:text-xl font-bold text-gradient">
                                     Monad Together
                                 </h1>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
                             <ConnectedUsersDisplay />
 
                             {/* Bouton Chat (seulement si pseudo défini) */}
                             {hasUsername && (
                                 <button
                                     onClick={() => setChatOpen(!chatOpen)}
-                                    className="relative px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors"
+                                    className="relative px-3 sm:px-6 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors text-sm"
                                 >
-                                    Chat {chatMessages.length > 0 && (
+                                    <span className="hidden sm:inline">Chat</span>
+                                    <span className="sm:hidden">💬</span>
+                                    {chatMessages.length > 0 && (
                                         <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
                                             {chatMessages.length}
                                         </span>
@@ -273,9 +296,10 @@ export default function MonadTilesGame() {
                             {hasUsername && (
                                 <button
                                     onClick={() => setShowVictoryPopup(true)}
-                                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors text-sm"
+                                    className="px-2 sm:px-4 py-1.5 sm:py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors text-xs sm:text-sm"
                                 >
-                                    🧪 Test Victory
+                                    <span className="hidden sm:inline">🧪 Test Victory</span>
+                                    <span className="sm:hidden">🧪</span>
                                 </button>
                             )}
 
@@ -309,20 +333,21 @@ export default function MonadTilesGame() {
                                                         <button
                                                             onClick={openConnectModal}
                                                             type="button"
-                                                            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium transition-colors text-sm"
+                                                            className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium transition-colors text-xs sm:text-sm"
                                                         >
-                                                            Connect Wallet
+                                                            <span className="hidden sm:inline">Connect Wallet</span>
+                                                            <span className="sm:hidden">🔗</span>
                                                         </button>
                                                     );
                                                 }
 
                                                 return (
-                                                    <div className="flex items-center space-x-2">
+                                                    <div className="flex items-center space-x-1 sm:space-x-2">
                                                         <button
                                                             onClick={openChainModal}
                                                             style={{ display: 'flex', alignItems: 'center' }}
                                                             type="button"
-                                                            className="px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                                                            className="px-2 sm:px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-xs sm:text-sm"
                                                         >
                                                             {chain.hasIcon && (
                                                                 <div
@@ -344,15 +369,16 @@ export default function MonadTilesGame() {
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            {chain.name}
+                                                            <span className="hidden sm:inline">{chain.name}</span>
                                                         </button>
 
                                                         <button
                                                             onClick={openAccountModal}
                                                             type="button"
-                                                            className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                                            className="px-2 sm:px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm"
                                                         >
-                                                            {account.displayName}
+                                                            <span className="hidden sm:inline">{account.displayName}</span>
+                                                            <span className="sm:hidden">✅</span>
                                                         </button>
                                                     </div>
                                                 );
@@ -376,12 +402,12 @@ export default function MonadTilesGame() {
                     {/* Overlay de bienvenue avec saisie du pseudo */}
                     {!hasUsername && (
                         <div
-                            className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10"
+                            className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 p-4"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Monad Together!</h2>
-                                <p className="text-gray-600 mb-6">Please enter your username to join the game:</p>
+                            <div className="bg-[#836EF9] p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 rounded-lg">
+                                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">Welcome to Monad Together!</h2>
+                                <p className="text-white mb-6 text-sm sm:text-base">Please enter your username to join the game:</p>
 
                                 <div className="space-y-4">
                                     <input
@@ -390,94 +416,98 @@ export default function MonadTilesGame() {
                                         onChange={(e) => setTempUsername(e.target.value)}
                                         onKeyPress={handleUsernameKeyPress}
                                         placeholder="Enter your username..."
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-black"
+                                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-white text-sm sm:text-base"
                                         autoFocus
                                     />
 
                                     <button
                                         onClick={handleUsernameSubmit}
                                         disabled={!tempUsername.trim()}
-                                        className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold"
+                                        className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold text-sm sm:text-base"
+                                        
                                     >
                                         Join Game
                                     </button>
                                 </div>
 
-                                <p className="text-xs text-gray-500 mt-4">
-                                    🎮 You can play without connecting a wallet<br />
-                                    💎 Connect your wallet later to mint victory NFTs!
+                                <p className="text-xs sm:text-sm text-white mt-4">
+                                    You can play without connecting a wallet<br />
+                                    Connect your wallet needed to mint victory NFT!
                                 </p>
                             </div>
                         </div>
                     )}
 
                     {/* Header avec stats */}
-                    <div className="mb-2 text-center">
-                        <div className="flex gap-8 justify-center items-center text-white">
-                            <div className="text-lg">
+                    <div className="mb-4 sm:mb-2 text-center">
+                        <div className="flex gap-4 sm:gap-8 justify-center items-center text-white flex-wrap">
+                            <div className="text-base sm:text-lg">
                                 Progress: <span className="font-mono text-purple-300">{activeTiles}/{totalTiles}</span>
                             </div>
                             {gameState === 'victory-timer' && (
-                                <div className="text-lg text-yellow-400 animate-pulse">
-                                    Victory in: <span className="font-mono text-2xl">{victoryTimer}s</span>
+                                <div className="text-base sm:text-lg text-yellow-400 animate-pulse">
+                                    Victory in: <span className="font-mono text-xl sm:text-2xl">{victoryTimer}s</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Grille de jeu */}
-                    <div className="flex gap-12 items-center justify-center">
+                    <div className="flex flex-col md:flex-row gap-4 md:gap-8 lg:gap-12 items-center justify-center px-2 overflow-x-auto">
                         {Object.entries(LETTER_PATTERNS).map(([letter, pattern], letterIndex) => (
-                            <div key={letter} className="flex flex-col gap-1">
-                                {pattern.map((row, rowIndex) => (
-                                    <div key={rowIndex} className="flex gap-1">
-                                        {row.map((isActive, colIndex) => {
-                                            const tileKey = `${letter}-${rowIndex}-${colIndex}`;
-                                            const isFlipped = tiles[tileKey] || false;
+                            <div key={letter} className="flex flex-col items-center flex-shrink-0">
+                                
+                                <div className="flex flex-col gap-0.5 sm:gap-1">
+                                    {pattern.map((row, rowIndex) => (
+                                        <div key={rowIndex} className="flex gap-0.5 sm:gap-1">
+                                            {row.map((isActive, colIndex) => {
+                                                const tileKey = `${letter}-${rowIndex}-${colIndex}`;
+                                                const isFlipped = tiles[tileKey] || false;
 
-                                            return (
-                                                <div
-                                                    key={colIndex}
-                                                    className={`w-8 h-8 rounded-sm border-1 transition-all duration-200 relative ${isActive
-                                                        ? `cursor-pointer border-[#200052] [perspective:1000px]`
-                                                        : 'border-transparent bg-transparent'}`}
-                                                    onClick={isActive ? (e) => {
-                                                        e.stopPropagation();
-                                                        handleTileClick(tileKey);
-                                                    } : undefined}
-                                                >
-                                                    {isActive && (
-                                                        <div
-                                                            className={`w-full h-full rounded-sm transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
-                                                        >
-                                                            <div className="absolute inset-0 rounded-sm bg-white hover:bg-gray-100 border-2 border-purple-400 [backface-visibility:hidden]" />
-                                                            <div className="absolute inset-0 rounded-sm bg-[#836EF9] border-2 border-purple-400 [backface-visibility:hidden] [transform:rotateY(180deg)]" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ))}
+                                                return (
+                                                    <div
+                                                        key={colIndex}
+                                                        className={`w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 rounded-sm border-1 transition-all duration-200 relative ${isActive
+                                                            ? `cursor-pointer border-[#200052] [perspective:1000px] touch-manipulation`
+                                                            : 'border-transparent bg-transparent'}`}
+                                                        onClick={isActive ? (e) => {
+                                                            e.stopPropagation();
+                                                            handleTileClick(tileKey);
+                                                        } : undefined}
+                                                    >
+                                                        {isActive && (
+                                                            <div
+                                                                className={`w-full h-full rounded-sm transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                                                            >
+                                                                <div className="absolute inset-0 rounded-sm bg-white hover:bg-gray-100 border-2 border-purple-400 [backface-visibility:hidden]" />
+                                                                <div className="absolute inset-0 rounded-sm bg-[#836EF9] border-2 border-purple-400 [backface-visibility:hidden] [transform:rotateY(180deg)]" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>
 
                     {/* Instructions */}
-                    <div className="mt-8 text-center text-gray-300 max-w-2xl">
-                        <p className="mb-2">Click on tiles to flip them purple. Get all tiles purple and keep them that way for 60 seconds!</p>
-                        <p className="text-sm text-red-300">If a player click anywhere else, all the tiles will reset!</p>
+                    <div className="mt-6 sm:mt-8 text-center text-gray-300 max-w-2xl px-4">
+                        <p className="mb-2 text-sm sm:text-base">Click on tiles to flip them purple. Get all tiles purple and keep them that way for 60 seconds!</p>
+                        <p className="text-xs sm:text-sm text-red-300">If a player click anywhere else, all the tiles will reset!</p>
                     </div>
 
                     {/* Popup de victoire */}
                     {showVictoryPopup && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                             <div 
-                                className="bg-white rounded-lg p-8 text-center max-w-md mx-4"
+                                className="bg-white rounded-lg p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 w-full"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <h2 className="text-3xl font-bold text-purple-600 mb-4">🎉 VICTORY! 🎉</h2>
-                                <p className="text-gray-700 mb-6">
+                                <h2 className="text-2xl sm:text-3xl font-bold text-purple-600 mb-4">🎉 VICTORY! 🎉</h2>
+                                <p className="text-gray-700 mb-6 text-sm sm:text-base">
                                     Congratulations! You successfully flipped all tiles and maintained them for 60 seconds!
                                 </p>
 
@@ -488,22 +518,20 @@ export default function MonadTilesGame() {
                                     <NFTMintButton
                                         onMintSuccess={(txHash) => {
                                             console.log('NFT minted!', txHash);
-                                            // Optionnel : fermer la popup, afficher un toast, etc.
                                         }}
                                         onMintError={(error) => {
                                             console.error('Mint failed:', error);
-                                            // Optionnel : afficher l'erreur à l'utilisateur
                                         }}
                                     />
                                 </div>
 
-                                <div className="flex gap-4 justify-center">
+                                <div className="flex gap-2 sm:gap-4 justify-center flex-wrap">
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             startNewGame();
                                         }}
-                                        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                        className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base"
                                     >
                                         New Game
                                     </button>
@@ -512,7 +540,7 @@ export default function MonadTilesGame() {
                                             e.stopPropagation();
                                             closeVictoryPopup();
                                         }}
-                                        className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                        className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
                                     >
                                         Close
                                     </button>
@@ -525,7 +553,7 @@ export default function MonadTilesGame() {
                 {/* Chat sidebar avec bulles */}
                 {chatOpen && hasUsername && (
                     <div
-                        className="fixed top-0 right-0 h-full w-100 bg-gray-800 border-l border-gray-700 flex flex-col z-50 shadow-lg"
+                        className="fixed top-0 right-0 h-full w-full sm:w-80 md:w-96 bg-gray-800 border-l border-gray-700 flex flex-col z-50 shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
@@ -534,19 +562,19 @@ export default function MonadTilesGame() {
                         >
                             ×
                         </button>
-                        <div className="p-4 border-b border-gray-700 relative">
-                            <h3 className="text-white font-semibold">Chat</h3>
+                        <div className="p-3 sm:p-4 border-b border-gray-700 relative">
+                            <h3 className="text-white font-semibold text-sm sm:text-base">Chat</h3>
                         </div>
 
-                        {/* Messages avec bulles */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {/* Messages avec bulles et auto-scroll */}
+                        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3">
                             {chatMessages.map((msg) => {
                                 const isMyMessage = msg.senderId === myUserId;
                                 const senderName = getDisplayName(msg.senderId);
 
                                 return (
                                     <div key={msg.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${isMyMessage
+                                        <div className={`max-w-xs sm:max-w-sm lg:max-w-md px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm ${isMyMessage
                                                 ? 'bg-green-600 text-white'
                                                 : 'bg-gray-700 text-white'
                                             }`}>
@@ -563,11 +591,13 @@ export default function MonadTilesGame() {
                                 );
                             })}
                             {chatMessages.length === 0 && (
-                                <div className="text-gray-500 text-sm italic text-center">No messages yet. Start the conversation!</div>
+                                <div className="text-gray-500 text-xs sm:text-sm italic text-center">No messages yet. Start the conversation!</div>
                             )}
+                            {/* Élément invisible pour le scroll automatique */}
+                            <div ref={messagesEndRef} />
                         </div>
 
-                        <div className="p-4 border-t border-gray-700">
+                        <div className="p-3 sm:p-4 border-t border-gray-700">
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -575,12 +605,12 @@ export default function MonadTilesGame() {
                                     onChange={(e) => setCurrentMessage(e.target.value)}
                                     onKeyPress={handleKeyPress}
                                     placeholder="Type a message..."
-                                    className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                                     onClick={(e) => e.stopPropagation()}
                                 />
                                 <button
                                     onClick={sendMessage}
-                                    className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors"
+                                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors text-xs sm:text-sm"
                                 >
                                     Send
                                 </button>
@@ -614,11 +644,12 @@ function ConnectedUsersDisplay() {
     if (!connectedUsers || connectedUsers.length === 0) return null;
 
     return (
-        <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-text-muted">
-                    {connectedUsers.length} {connectedUsers.length !== 1 ? "s" : ""} online
+                <span className="text-xs sm:text-sm text-text-muted">
+                    <span className="hidden sm:inline">{connectedUsers.length} {connectedUsers.length !== 1 ? "s" : ""} online</span>
+                    <span className="sm:hidden">{connectedUsers.length}</span>
                 </span>
             </div>
         </div>
