@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactTogether, useConnectedUsers } from "react-together";
+import WalletProvider from "./WalletProvider";
 
 interface ReactTogetherWrapperProps {
   children: React.ReactNode;
@@ -19,13 +20,13 @@ export default function ReactTogetherWrapper({
   };
 
   return (
-    <ReactTogether sessionParams={sessionParams} rememberUsers={true}>
-      <div className="min-h-screen bg-background">
-        
-
-        <main className="relative z-10">{children}</main>
-      </div>
-    </ReactTogether>
+    <WalletProvider>
+      <ReactTogether sessionParams={sessionParams} rememberUsers={true}>
+        <div className="min-h-screen bg-background">
+          <main className="relative z-10">{children}</main>
+        </div>
+      </ReactTogether>
+    </WalletProvider>
   );
 }
 

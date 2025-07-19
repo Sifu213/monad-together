@@ -2,8 +2,11 @@
 
 import { useStateTogether, ChatMessage, useConnectedUsers, useCursors } from "react-together";
 import { useEffect, useState } from "react";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, useDisconnect } from 'wagmi';
+import NFTMintButton from './NFTMintButton';
 
-// Définition des patterns pour chaque lettre (format 7x7, ~124 tuiles total)
+// ... (gardez tous vos LETTER_PATTERNS et interfaces existants)
 const LETTER_PATTERNS = {
     M: [
         [true, false, false, false, false, false, true],
@@ -53,49 +56,69 @@ const LETTER_PATTERNS = {
 };
 
 interface TileState {
-    [key: string]: boolean; // key format: "letter-row-col"
+    [key: string]: boolean;
 }
 
 export default function MonadTilesGame() {
+    // Hooks wallet
+    const { address, isConnected } = useAccount();
+    const { disconnect } = useDisconnect();
+
+    // Vos hooks existants
     const [tiles, setTiles] = useStateTogether<TileState>('monad-tiles', {});
     const [gameState, setGameState] = useStateTogether<'playing' | 'victory-timer' | 'won'>('game-state', 'playing');
     const [victoryTimer, setVictoryTimer] = useStateTogether<number>('victory-timer', 60);
     const [showVictoryPopup, setShowVictoryPopup] = useState(false);
 
-    // Chat et utilisateurs
+    // Chat et utilisateurs (avec wallet integration)
     const [chatMessages, setChatMessages] = useStateTogether<ChatMessage[]>('chat-messages', []);
     const [usernames, setUsernames] = useStateTogether<{ [userId: string]: string }>('usernames', {});
+    const [walletAddresses, setWalletAddresses] = useStateTogether<{ [userId: string]: string }>('wallet-addresses', {});
     const [currentMessage, setCurrentMessage] = useState('');
     const [tempUsername, setTempUsername] = useState('');
     const [chatOpen, setChatOpen] = useState(false);
 
     const connectedUsers = useConnectedUsers();
-    const { myCursor, allCursors } = useCursors({ deleteOnLeave: true });
+    const { myCursor, allCursors } = useCursors({
+        deleteOnLeave: true,
+        throttleDelay: 50,
+        omitMyValue: true // Exclure mon propre curseur
+    });
 
-    // Utiliser l'ID du système react-together
     const myUserId = connectedUsers.find(user => user.isYou)?.userId || 'unknown';
 
-    // Debug: vérifier les usernames
-    console.log('Current usernames:', usernames);
-    console.log('My userId from connectedUsers:', myUserId);
-    console.log('My username:', usernames[myUserId]);
-    console.log('ConnectedUsers:', connectedUsers);
+    // Synchroniser l'adresse wallet avec l'utilisateur
+    useEffect(() => {
+        if (isConnected && address && myUserId !== 'unknown') {
+            setWalletAddresses(prev => ({
+                ...prev,
+                [myUserId]: address
+            }));
+        }
+    }, [isConnected, address, myUserId, setWalletAddresses]);
 
-    // Calculer le nombre total de tuiles et les tuiles actives
+    // Vos calculs existants
     const totalTiles = Object.values(LETTER_PATTERNS).reduce((total, pattern) =>
         total + pattern.reduce((rowTotal, row) =>
             rowTotal + row.filter(cell => cell).length, 0), 0
     );
 
     const activeTiles = Object.values(tiles).filter(Boolean).length;
-
-    // Vérifier si toutes les tuiles sont retournées
     const allTilesFlipped = activeTiles === totalTiles;
-
-    // Vérifier si l'utilisateur a un pseudo
     const hasUsername = usernames[myUserId];
 
-    // Gérer le timer de victoire
+    // Fonction pour obtenir le nom d'affichage (pseudo ou adresse)
+    const getDisplayName = (userId: string) => {
+        const username = usernames[userId];
+        if (username) return username;
+
+        const walletAddr = walletAddresses[userId];
+        if (walletAddr) return `${walletAddr.slice(0, 6)}...${walletAddr.slice(-4)}`;
+
+        return `User ${userId.slice(0, 6)}`;
+    };
+
+    // Vos useEffects existants pour le timer...
     useEffect(() => {
         if (allTilesFlipped && gameState === 'playing') {
             setGameState('victory-timer');
@@ -105,7 +128,6 @@ export default function MonadTilesGame() {
         }
     }, [allTilesFlipped, gameState]);
 
-    // Countdown timer
     useEffect(() => {
         if (gameState === 'victory-timer' && victoryTimer > 0) {
             const interval = setInterval(() => {
@@ -122,7 +144,7 @@ export default function MonadTilesGame() {
         }
     }, [gameState, victoryTimer]);
 
-    // Gérer le clic sur une tuile
+    // Handlers - seulement pseudo obligatoire
     const handleTileClick = (tileKey: string) => {
         if (!hasUsername) return;
         setTiles(prev => ({
@@ -131,7 +153,6 @@ export default function MonadTilesGame() {
         }));
     };
 
-    // Gérer le clic sur l'arrière-plan (reset)
     const handleBackgroundClick = () => {
         if (!hasUsername) return;
         setTiles({});
@@ -140,12 +161,10 @@ export default function MonadTilesGame() {
         setShowVictoryPopup(false);
     };
 
-    // Fermer la popup de victoire
     const closeVictoryPopup = () => {
         setShowVictoryPopup(false);
     };
 
-    // Nouveau jeu
     const startNewGame = () => {
         setTiles({});
         setGameState('playing');
@@ -153,7 +172,6 @@ export default function MonadTilesGame() {
         setShowVictoryPopup(false);
     };
 
-    // Gestion du pseudo
     const handleUsernameSubmit = () => {
         if (tempUsername.trim()) {
             setUsernames(prev => ({
@@ -164,12 +182,12 @@ export default function MonadTilesGame() {
         }
     };
 
-    // Gestion du chat
+    // Chat avec identification correcte
     const sendMessage = () => {
-        if (currentMessage.trim() && usernames[myUserId]) {
+        if (currentMessage.trim() && hasUsername) {
             const newMessage: ChatMessage = {
                 id: Date.now(),
-                senderId: usernames[myUserId],
+                senderId: myUserId, // Stocke l'userId pour l'identification
                 message: currentMessage.trim(),
                 sentAt: Date.now()
             };
@@ -190,7 +208,6 @@ export default function MonadTilesGame() {
         }
     };
 
-    // Fermer le chat avec gestion de la propagation
     const handleCloseChatClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         setChatOpen(false);
@@ -200,11 +217,9 @@ export default function MonadTilesGame() {
         <div className="h-screen flex flex-col bg-background relative">
             {/* Curseurs des autres joueurs */}
             {Object.entries(allCursors).map(([cursorUserId, cursor]) => {
-                if (!cursor) return null;
-                
-                // Debug: vérifier l'userId du curseur
-                console.log('Cursor userId:', cursorUserId, 'Username:', usernames[cursorUserId]);
-                
+                if (!cursor || cursorUserId === myUserId) return null; // Exclure mon propre curseur
+
+                // Essayer une approche plus simple avec clientX/clientY
                 return (
                     <div
                         key={cursorUserId}
@@ -216,18 +231,11 @@ export default function MonadTilesGame() {
                             transition: 'all 0.1s linear',
                         }}
                     >
-                        {/* Curseur principal */}
                         <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg" />
-                        
-                        {/* Nom du joueur - toujours affiché */}
                         <div className="absolute top-6 left-2 px-2 py-1 text-xs font-medium text-white bg-blue-500 rounded shadow-lg whitespace-nowrap">
-                            {usernames[cursorUserId] || `User ${cursorUserId.slice(0, 6)}`}
+                            {getDisplayName(cursorUserId)}
                         </div>
-                        
-                        {/* Debug info */}
-                        <div className="absolute top-12 left-2 px-1 py-0.5 text-xs text-black bg-yellow-200 rounded">
-                            Raw: {cursorUserId.slice(0, 4)} | Name: {usernames[cursorUserId] || 'NONE'}
-                        </div>
+
                     </div>
                 );
             })}
@@ -246,38 +254,113 @@ export default function MonadTilesGame() {
                         </div>
                         <div className="flex items-center space-x-4">
                             <ConnectedUsersDisplay />
-                            {!hasUsername ? (
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="text"
-                                        value={tempUsername}
-                                        onChange={(e) => setTempUsername(e.target.value)}
-                                        onKeyPress={handleUsernameKeyPress}
-                                        placeholder="Enter your username..."
-                                        className="px-3 py-1 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                                    />
-                                    <button
-                                        onClick={handleUsernameSubmit}
-                                        disabled={!tempUsername.trim()}
-                                        className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed text-sm"
-                                    >
-                                        Join
-                                    </button>
-                                </div>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={() => setChatOpen(!chatOpen)}
-                                        className="relative px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors"
-                                    >
-                                        Chat {chatMessages.length > 0 && (
-                                            <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                                                {chatMessages.length}
-                                            </span>
-                                        )}
-                                    </button>
-                                </>
+
+                            {/* Bouton Chat (seulement si pseudo défini) */}
+                            {hasUsername && (
+                                <button
+                                    onClick={() => setChatOpen(!chatOpen)}
+                                    className="relative px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors"
+                                >
+                                    Chat {chatMessages.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                                            {chatMessages.length}
+                                        </span>
+                                    )}
+                                </button>
                             )}
+
+                            {/* Bouton temporaire pour tester la popup de victoire */}
+                            {hasUsername && (
+                                <button
+                                    onClick={() => setShowVictoryPopup(true)}
+                                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors text-sm"
+                                >
+                                    🧪 Test Victory
+                                </button>
+                            )}
+
+                            {/* Connexion wallet optionnelle - toujours visible */}
+                            <ConnectButton.Custom>
+                                {({
+                                    account,
+                                    chain,
+                                    openAccountModal,
+                                    openChainModal,
+                                    openConnectModal,
+                                    mounted,
+                                }) => {
+                                    const ready = mounted;
+                                    const connected = ready && account && chain;
+
+                                    return (
+                                        <div
+                                            {...(!ready && {
+                                                'aria-hidden': true,
+                                                'style': {
+                                                    opacity: 0,
+                                                    pointerEvents: 'none',
+                                                    userSelect: 'none',
+                                                },
+                                            })}
+                                        >
+                                            {(() => {
+                                                if (!connected) {
+                                                    return (
+                                                        <button
+                                                            onClick={openConnectModal}
+                                                            type="button"
+                                                            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium transition-colors text-sm"
+                                                        >
+                                                            Connect Wallet
+                                                        </button>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div className="flex items-center space-x-2">
+                                                        <button
+                                                            onClick={openChainModal}
+                                                            style={{ display: 'flex', alignItems: 'center' }}
+                                                            type="button"
+                                                            className="px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                                                        >
+                                                            {chain.hasIcon && (
+                                                                <div
+                                                                    style={{
+                                                                        background: chain.iconBackground,
+                                                                        width: 16,
+                                                                        height: 16,
+                                                                        borderRadius: 999,
+                                                                        overflow: 'hidden',
+                                                                        marginRight: 6,
+                                                                    }}
+                                                                >
+                                                                    {chain.iconUrl && (
+                                                                        <img
+                                                                            alt={chain.name ?? 'Chain icon'}
+                                                                            src={chain.iconUrl}
+                                                                            style={{ width: 16, height: 16 }}
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            {chain.name}
+                                                        </button>
+
+                                                        <button
+                                                            onClick={openAccountModal}
+                                                            type="button"
+                                                            className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                                        >
+                                                            {account.displayName}
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    );
+                                }}
+                            </ConnectButton.Custom>
                         </div>
                     </div>
                 </div>
@@ -290,6 +373,44 @@ export default function MonadTilesGame() {
                     className="flex-1 bg-[#200052] flex flex-col items-center justify-center p-4 cursor-pointer"
                     onClick={handleBackgroundClick}
                 >
+                    {/* Overlay de bienvenue avec saisie du pseudo */}
+                    {!hasUsername && (
+                        <div
+                            className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Monad Together!</h2>
+                                <p className="text-gray-600 mb-6">Please enter your username to join the game:</p>
+
+                                <div className="space-y-4">
+                                    <input
+                                        type="text"
+                                        value={tempUsername}
+                                        onChange={(e) => setTempUsername(e.target.value)}
+                                        onKeyPress={handleUsernameKeyPress}
+                                        placeholder="Enter your username..."
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-black"
+                                        autoFocus
+                                    />
+
+                                    <button
+                                        onClick={handleUsernameSubmit}
+                                        disabled={!tempUsername.trim()}
+                                        className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold"
+                                    >
+                                        Join Game
+                                    </button>
+                                </div>
+
+                                <p className="text-xs text-gray-500 mt-4">
+                                    🎮 You can play without connecting a wallet<br />
+                                    💎 Connect your wallet later to mint victory NFTs!
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Header avec stats */}
                     <div className="mb-2 text-center">
                         <div className="flex gap-8 justify-center items-center text-white">
@@ -305,9 +426,7 @@ export default function MonadTilesGame() {
                     </div>
 
                     {/* Grille de jeu */}
-                    <div
-                        className="flex gap-12 items-center justify-center"
-                    >
+                    <div className="flex gap-12 items-center justify-center">
                         {Object.entries(LETTER_PATTERNS).map(([letter, pattern], letterIndex) => (
                             <div key={letter} className="flex flex-col gap-1">
                                 {pattern.map((row, rowIndex) => (
@@ -328,13 +447,10 @@ export default function MonadTilesGame() {
                                                     } : undefined}
                                                 >
                                                     {isActive && (
-                                                        <div 
+                                                        <div
                                                             className={`w-full h-full rounded-sm transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
                                                         >
-                                                            {/* Face avant (blanche) */}
                                                             <div className="absolute inset-0 rounded-sm bg-white hover:bg-gray-100 border-2 border-purple-400 [backface-visibility:hidden]" />
-                                                            
-                                                            {/* Face arrière (violette) */}
                                                             <div className="absolute inset-0 rounded-sm bg-[#836EF9] border-2 border-purple-400 [backface-visibility:hidden] [transform:rotateY(180deg)]" />
                                                         </div>
                                                     )}
@@ -356,20 +472,46 @@ export default function MonadTilesGame() {
                     {/* Popup de victoire */}
                     {showVictoryPopup && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                            <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4">
+                            <div 
+                                className="bg-white rounded-lg p-8 text-center max-w-md mx-4"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <h2 className="text-3xl font-bold text-purple-600 mb-4">🎉 VICTORY! 🎉</h2>
                                 <p className="text-gray-700 mb-6">
                                     Congratulations! You successfully flipped all tiles and maintained them for 60 seconds!
                                 </p>
+
+                                <div 
+                                    className="space-y-4 mb-6"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <NFTMintButton
+                                        onMintSuccess={(txHash) => {
+                                            console.log('NFT minted!', txHash);
+                                            // Optionnel : fermer la popup, afficher un toast, etc.
+                                        }}
+                                        onMintError={(error) => {
+                                            console.error('Mint failed:', error);
+                                            // Optionnel : afficher l'erreur à l'utilisateur
+                                        }}
+                                    />
+                                </div>
+
                                 <div className="flex gap-4 justify-center">
                                     <button
-                                        onClick={startNewGame}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            startNewGame();
+                                        }}
                                         className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                                     >
                                         New Game
                                     </button>
                                     <button
-                                        onClick={closeVictoryPopup}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            closeVictoryPopup();
+                                        }}
                                         className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                                     >
                                         Close
@@ -380,39 +522,51 @@ export default function MonadTilesGame() {
                     )}
                 </div>
 
-                {/* Chat sidebar (overlay) */}
+                {/* Chat sidebar avec bulles */}
                 {chatOpen && hasUsername && (
-                    <div 
+                    <div
                         className="fixed top-0 right-0 h-full w-80 bg-gray-800 border-l border-gray-700 flex flex-col z-50 shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Close button */}
                         <button
                             onClick={handleCloseChatClick}
                             className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl font-bold focus:outline-none z-10"
-                            aria-label="Close chat"
                         >
                             ×
                         </button>
-                        {/* Chat header */}
                         <div className="p-4 border-b border-gray-700 relative">
                             <h3 className="text-white font-semibold">Chat</h3>
                         </div>
 
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                            {chatMessages.map((msg) => (
-                                <div key={msg.id} className="text-sm">
-                                    <span className="text-blue-400 font-medium">{msg.senderId}:</span>
-                                    <span className="text-gray-300 ml-2">{msg.message}</span>
-                                </div>
-                            ))}
+                        {/* Messages avec bulles */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                            {chatMessages.map((msg) => {
+                                const isMyMessage = msg.senderId === myUserId;
+                                const senderName = getDisplayName(msg.senderId);
+
+                                return (
+                                    <div key={msg.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${isMyMessage
+                                                ? 'bg-green-600 text-white'
+                                                : 'bg-gray-700 text-white'
+                                            }`}>
+                                            {!isMyMessage && (
+                                                <div className="text-blue-400 font-medium text-xs mb-1">
+                                                    {senderName}
+                                                </div>
+                                            )}
+                                            <div className="break-words">
+                                                {msg.message}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                             {chatMessages.length === 0 && (
-                                <div className="text-gray-500 text-sm italic">No messages yet. Start the conversation!</div>
+                                <div className="text-gray-500 text-sm italic text-center">No messages yet. Start the conversation!</div>
                             )}
                         </div>
 
-                        {/* Input */}
                         <div className="p-4 border-t border-gray-700">
                             <div className="flex gap-2">
                                 <input
@@ -436,24 +590,20 @@ export default function MonadTilesGame() {
                 )}
             </div>
 
-<footer className="w-full px-4 bg-[#200052] sm:px-6 lg:px-8 py-0">
-        <div className="max-w-7xl mx-auto text-center">
-          
-            <nav className="text-gray-400 text-sm">
-              <ul className="flex items-center justify-center gap-4">
-                <li>
-                  Made by <a href="https://x.com/sifu_lam" target="_blank" rel="noopener noreferrer">Sifu_lam</a> for
-                </li>
-                <li>
-                  <img src="/img/logomonad.png" alt="monad" className="h-3 w-auto" />
-                </li>
-              </ul>
-            </nav>
-          
-        </div>
-      </footer>
-
-
+            <footer className="w-full px-4 bg-[#200052] sm:px-6 lg:px-8 py-0">
+                <div className="max-w-7xl mx-auto text-center">
+                    <nav className="text-gray-400 text-sm">
+                        <ul className="flex items-center justify-center gap-4">
+                            <li>
+                                Made by <a href="https://x.com/sifu_lam" target="_blank" rel="noopener noreferrer">Sifu_lam</a> for
+                            </li>
+                            <li>
+                                <img src="/img/logomonad.png" alt="monad" className="h-3 w-auto" />
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </footer>
         </div>
     );
 }
@@ -468,8 +618,7 @@ function ConnectedUsersDisplay() {
             <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-text-muted">
-                    {connectedUsers.length} {connectedUsers.length !== 1 ? "s" : ""}{" "}
-                    online
+                    {connectedUsers.length} {connectedUsers.length !== 1 ? "s" : ""} online
                 </span>
             </div>
         </div>
