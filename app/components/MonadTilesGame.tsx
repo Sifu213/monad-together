@@ -278,7 +278,7 @@ export default function MonadTilesGame() {
                             {hasUsername && (
                                 <button
                                     onClick={() => setChatOpen(!chatOpen)}
-                                    className="relative px-3 sm:px-6 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors text-sm"
+                                    className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200 text-sm"
                                 >
                                     <span className="hidden sm:inline">Chat</span>
                                     <span className="sm:hidden">💬</span>
@@ -321,7 +321,7 @@ export default function MonadTilesGame() {
                                                         <button
                                                             onClick={openConnectModal}
                                                             type="button"
-                                                            className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium transition-colors text-xs sm:text-sm"
+                                                            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200 text-xs sm:text-sm"
                                                         >
                                                             <span className="hidden sm:inline">Connect Wallet</span>
                                                             <span className="sm:hidden">🔗</span>
@@ -331,39 +331,12 @@ export default function MonadTilesGame() {
 
                                                 return (
                                                     <div className="flex items-center space-x-1 sm:space-x-2">
-                                                        <button
-                                                            onClick={openChainModal}
-                                                            style={{ display: 'flex', alignItems: 'center' }}
-                                                            type="button"
-                                                            className="px-2 sm:px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-xs sm:text-sm"
-                                                        >
-                                                            {chain.hasIcon && (
-                                                                <div
-                                                                    style={{
-                                                                        background: chain.iconBackground,
-                                                                        width: 16,
-                                                                        height: 16,
-                                                                        borderRadius: 999,
-                                                                        overflow: 'hidden',
-                                                                        marginRight: 6,
-                                                                    }}
-                                                                >
-                                                                    {chain.iconUrl && (
-                                                                        <img
-                                                                            alt={chain.name ?? 'Chain icon'}
-                                                                            src={chain.iconUrl}
-                                                                            style={{ width: 16, height: 16 }}
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                            <span className="hidden sm:inline">{chain.name}</span>
-                                                        </button>
+                                                        
 
                                                         <button
                                                             onClick={openAccountModal}
                                                             type="button"
-                                                            className="px-2 sm:px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm"
+                                                            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200 text-xs sm:text-sm"
                                                         >
                                                             <span className="hidden sm:inline">{account.displayName}</span>
                                                             <span className="sm:hidden">✅</span>
