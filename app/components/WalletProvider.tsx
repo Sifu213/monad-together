@@ -34,7 +34,7 @@ export const monadTestnet = defineChain({
 
 const config = getDefaultConfig({
   appName: 'Monad Together',
-  projectId: '3afda50686b39a0edbb0a266b169d453', // Votre Project ID existant
+  projectId: '3afda50686b39a0edbb0a266b169d453', 
   chains: [monadTestnet],
   ssr: false,
 });

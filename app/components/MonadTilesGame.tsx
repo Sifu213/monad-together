@@ -235,12 +235,10 @@ export default function MonadTilesGame() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-background relative">
-            {/* Curseurs des autres joueurs */}
+        <div className="h-screen flex flex-col bg-background relative"> 
             {Object.entries(allCursors).map(([cursorUserId, cursor]) => {
-                if (!cursor || cursorUserId === myUserId) return null; // Exclure mon propre curseur
+                if (!cursor || cursorUserId === myUserId) return null; 
 
-                // Essayer une approche plus simple avec clientX/clientY
                 return (
                     <div
                         key={cursorUserId}
@@ -302,8 +300,7 @@ export default function MonadTilesGame() {
                                     <span className="sm:hidden">🧪</span>
                                 </button>
                             )}
-
-                            {/* Connexion wallet optionnelle - toujours visible */}
+                       
                             <ConnectButton.Custom>
                                 {({
                                     account,
@@ -503,11 +500,11 @@ export default function MonadTilesGame() {
                     {showVictoryPopup && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                             <div 
-                                className="bg-white rounded-lg p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 w-full"
+                                className="bg-[#836EF9] rounded-lg p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 w-full"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <h2 className="text-2xl sm:text-3xl font-bold text-purple-600 mb-4">🎉 VICTORY! 🎉</h2>
-                                <p className="text-gray-700 mb-6 text-sm sm:text-base">
+                                <h2 className="text-2xl sm:text-3xl font-bold text-white-600 mb-4">VICTORY!</h2>
+                                <p className="text-white mb-6 text-sm sm:text-base">
                                     Congratulations! You successfully flipped all tiles and maintained them for 60 seconds!
                                 </p>
 
@@ -531,7 +528,7 @@ export default function MonadTilesGame() {
                                             e.stopPropagation();
                                             startNewGame();
                                         }}
-                                        className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base"
+                                        className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold text-sm sm:text-base"
                                     >
                                         New Game
                                     </button>

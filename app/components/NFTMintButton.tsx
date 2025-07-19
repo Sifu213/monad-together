@@ -57,26 +57,24 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
     }
   };
 
-  // Gérer le succès de la transaction
+
   if (isConfirmed && hash && !mintSuccess) {
     setMintSuccess(true);
     setIsMinting(false);
     onMintSuccess?.(hash);
   }
 
-  // Gérer les erreurs
   if ((writeError || confirmError) && isMinting) {
     setIsMinting(false);
     const errorMessage = writeError?.message || confirmError?.message || 'Transaction failed';
     onMintError?.(errorMessage);
   }
 
-  // État de succès
   if (mintSuccess) {
     return (
       <div className="text-center space-y-3">
         <div className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold">
-          ✅ NFT Minted Successfully!
+          NFT Minted Successfully!
         </div>
         {hash && (
           <a
@@ -85,16 +83,17 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
             rel="noopener noreferrer"
             className="text-sm text-purple-600 hover:text-purple-700 underline"
           >
-            View on MonadScan
+            View on Monad Explorer
           </a>
         )}
       </div>
     );
   }
 
-  // État de minting en cours
   if (isMinting || isConfirming) {
     return (
+      <div className="flex justify-center text-center space-y-3">
+     
       <button
         disabled
         className="px-6 py-3 bg-purple-400 text-white rounded-lg cursor-not-allowed font-semibold flex items-center justify-center gap-2"
@@ -102,14 +101,15 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
         {isConfirming ? 'Confirming...' : 'Minting...'}
       </button>
+      </div>
     );
   }
 
-  // État non connecté - Afficher le bouton de connexion
+
   if (!isConnected) {
     return (
       <div className="text-center space-y-3">
-        <div className="text-gray-600 mb-3">
+        <div className="text-white mb-3">
           Connect your wallet to mint your Victory NFT!
         </div>
         <ConnectButton.Custom>
@@ -144,9 +144,9 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
                           openConnectModal();
                         }}
                         type="button"
-                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200"
                       >
-                        🔗 Connect Wallet to Mint
+                        Connect Wallet to Mint
                       </button>
                     );
                   }
@@ -170,10 +170,9 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
     );
   }
 
-  // État connecté - Afficher le bouton de mint
   return (
     <div className="text-center space-y-3">
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-white">
         Wallet: {address?.slice(0, 6)}...{address?.slice(-4)}
       </div>
       <button
@@ -181,9 +180,9 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
           e.stopPropagation();
           handleMint();
         }}
-        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200"
       >
-        🎉 Mint Victory NFT (Free)
+        Mint Victory NFT (Free)
       </button>
     </div>
   );
