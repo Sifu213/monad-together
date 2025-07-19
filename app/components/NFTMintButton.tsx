@@ -4,30 +4,13 @@ import { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { parseEther } from 'viem';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contract'
 
 interface NFTMintButtonProps {
   onMintSuccess?: (txHash: string) => void;
   onMintError?: (error: string) => void;
 }
 
-// Configuration du contrat NFT (à adapter selon votre contrat)
-const NFT_CONTRACT_ADDRESS = '0x1234567890123456789012345678901234567890' as `0x${string}`; // Adresse temporaire pour test
-const NFT_MINT_PRICE = '0.001'; // Prix en ETH/MON
-
-// ABI minimal pour la fonction mint
-const NFT_ABI = [
-  {
-    name: 'mint',
-    type: 'function',
-    stateMutability: 'payable',
-    inputs: [
-      { name: 'to', type: 'address' },
-    ],
-    outputs: [
-      { name: 'tokenId', type: 'uint256' },
-    ],
-  },
-] as const;
 
 export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintButtonProps) {
   const { address, isConnected } = useAccount();
@@ -60,11 +43,10 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
       setIsMinting(true);
       
       await writeContract({
-        address: NFT_CONTRACT_ADDRESS,
-        abi: NFT_ABI,
-        functionName: 'mint',
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'mintVictoryNFT',
         args: [address],
-        value: parseEther(NFT_MINT_PRICE),
       });
       
     } catch (error: unknown) {
@@ -98,7 +80,7 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
         </div>
         {hash && (
           <a
-            href={`https://testnet.monadscan.xyz/tx/${hash}`}
+            href={`https://monad-testnet.socialscan.io/tx/${hash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-purple-600 hover:text-purple-700 underline"
@@ -201,7 +183,7 @@ export default function NFTMintButton({ onMintSuccess, onMintError }: NFTMintBut
         }}
         className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
       >
-        🎉 Mint Victory NFT ({NFT_MINT_PRICE} MON)
+        🎉 Mint Victory NFT (Free)
       </button>
     </div>
   );

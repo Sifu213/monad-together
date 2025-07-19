@@ -15,8 +15,8 @@ export default function ReactTogetherWrapper({
       process.env.NEXT_PUBLIC_DEFAULT_APP_ID ||
       "io.multisynq.monad-together",
     apiKey: process.env.NEXT_PUBLIC_MULTISYNQ_API_KEY || "20Ovt2JGkI7CdZQZnZDBLr9sq7x7KwWxEOYuBSrK1C",
-    name: process.env.NEXT_PUBLIC_DEFAULT_SESSION_NAME || "default-session",
-    password: process.env.NEXT_PUBLIC_DEFAULT_SESSION_PASSWORD || "demo123",
+    name: process.env.NEXT_PUBLIC_DEFAULT_SESSION_NAME || "default-session2",
+    password: process.env.NEXT_PUBLIC_DEFAULT_SESSION_PASSWORD || "demo123ddssvcdfsfd",
   };
 
   return (
