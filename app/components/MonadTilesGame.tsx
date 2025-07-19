@@ -290,16 +290,7 @@ export default function MonadTilesGame() {
                                 </button>
                             )}
 
-                            {/* Bouton temporaire pour tester la popup de victoire */}
-                            {hasUsername && (
-                                <button
-                                    onClick={() => setShowVictoryPopup(true)}
-                                    className="px-2 sm:px-4 py-1.5 sm:py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors text-xs sm:text-sm"
-                                >
-                                    <span className="hidden sm:inline">🧪 Test Victory</span>
-                                    <span className="sm:hidden">🧪</span>
-                                </button>
-                            )}
+                           
                        
                             <ConnectButton.Custom>
                                 {({
