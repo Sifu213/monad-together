@@ -525,7 +525,7 @@ export default function MonadTilesGame() {
                 {/* Chat sidebar avec bulles */}
                 {chatOpen && hasUsername && (
                     <div
-                        className="fixed top-0 right-0 h-full w-80 bg-gray-800 border-l border-gray-700 flex flex-col z-50 shadow-lg"
+                        className="fixed top-0 right-0 h-full w-100 bg-gray-800 border-l border-gray-700 flex flex-col z-50 shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
