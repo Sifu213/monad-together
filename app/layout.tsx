@@ -41,12 +41,12 @@ export default function RootLayout({
         <title>Monad Together</title>
         <meta property="og:title" content="Monad Together" />
         <meta property="og:description" content="Complete the Monad tiles with the community!" />
-        <meta property="og:image" content="/img/Monad_together.jpg" />
-        <meta property="og:url" content="" />
+        <meta property="og:image" content="https://monad-together.vercel.app/img/Monad_together.jpg" />
+        <meta property="og:url" content="https://monad-together.vercel.app/" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Monad Together" />
         <meta name="twitter:description" content="Complete the Monad tiles with the community!" />
-        <meta name="twitter:image" content="/img/Monad_together.jpg" />
+        <meta name="twitter:image" content="https://monad-together.vercel.app/img/Monad_together.jpg" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

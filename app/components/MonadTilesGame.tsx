@@ -285,13 +285,9 @@ export default function MonadTilesGame() {
                                     onClick={() => setChatOpen(!chatOpen)}
                                     className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-all duration-200 text-sm"
                                 >
-                                    <span className="hidden sm:inline">Chat</span>
-                                    
+                                    <span className="hidden sm:inline">Chat</span>                                   
                                 </button>
                             )}
-
-
-
                             <ConnectButton.Custom>
                                 {({
                                     account,
