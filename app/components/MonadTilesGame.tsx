@@ -1,6 +1,6 @@
 "use client";
 
-import { useStateTogether, ChatMessage, useConnectedUsers, useCursors } from "react-together";
+import { useStateTogether, ChatMessage, useConnectedUsers, Cursors } from "react-together";
 import { useEffect, useState, useRef } from "react";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect } from 'wagmi';
@@ -58,7 +58,91 @@ interface TileState {
     [key: string]: boolean;
 }
 
-const TIMER_DURATION = 30; // 45 secondes
+const TIMER_DURATION = 45; // 45 secondes
+
+
+interface CustomCursorProps {
+    userId: string;
+    pageX: number;
+    pageY: number;
+    transitionDuration?: number;
+    getUserColor?: (userId: string) => string;
+}
+
+
+function CustomUserCursor({ 
+    userId, 
+    pageX, 
+    pageY, 
+    transitionDuration = 100,
+    getUserColor
+}: CustomCursorProps) {
+    const connectedUsers = useConnectedUsers();
+    const [usernames] = useStateTogether<{ [userId: string]: string }>('usernames', {});
+    const [walletAddresses] = useStateTogether<{ [userId: string]: string }>('wallet-addresses', {});
+    
+    // Fonction pour obtenir le nom d'affichage
+    const getDisplayName = (userId: string) => {
+        const username = usernames[userId];
+        if (username) return username;
+
+        const walletAddr = walletAddresses[userId];
+        if (walletAddr) return `${walletAddr.slice(0, 6)}...${walletAddr.slice(-4)}`;
+
+        return `User ${userId.slice(0, 6)}`;
+    };
+
+    const color = getUserColor ? getUserColor(userId) : '#3B82F6';
+    const displayName = getDisplayName(userId);
+    
+    return (
+        <div
+            style={{
+                position: 'fixed',
+                left: pageX,
+                top: pageY,
+                pointerEvents: 'none',
+                zIndex: 9999,
+                transition: `all ${transitionDuration}ms ease-out`,
+                transform: 'translate(-2px, -2px)'
+            }}
+        >
+            {/* Curseur en forme de flèche */}
+            <div
+                style={{
+                    width: '20px',
+                    height: '20px',
+                    backgroundColor: color,
+                    borderRadius: '50% 0 50% 50%',
+                    transform: 'rotate(-45deg)',
+                    position: 'relative',
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                }}
+            />
+            
+            {/* Nom du joueur */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '25px',
+                    left: '10px',
+                    backgroundColor: color,
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    border: '1px solid white',
+                }}
+            >
+                {displayName}
+            </div>
+        </div>
+    );
+}
 
 export default function MonadTilesGame() {
     // Hooks wallet
@@ -83,13 +167,28 @@ export default function MonadTilesGame() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const connectedUsers = useConnectedUsers();
-    const { myCursor, allCursors } = useCursors({
-        deleteOnLeave: true,
-        throttleDelay: 50,
-        omitMyValue: true
-    });
-
     const myUserId = connectedUsers.find(user => user.isYou)?.userId || 'unknown';
+
+    // Fonction pour obtenir la couleur du curseur par utilisateur
+    const getUserColor = (userId: string) => {
+        const colors = [
+            '#FF6B6B', // Rouge
+            '#4ECDC4', // Teal
+            '#45B7D1', // Bleu
+            '#96CEB4', // Vert
+            '#FFEAA7', // Jaune
+            '#DDA0DD', // Plum
+            '#98D8C8', // Mint
+            '#F7DC6F'  // Jaune clair
+        ];
+        
+        // Utiliser l'userId pour assigner une couleur consistante
+        const colorIndex = userId.split('').reduce((acc, char) => 
+            acc + char.charCodeAt(0), 0
+        ) % colors.length;
+        
+        return colors[colorIndex];
+    };
 
     // Calculs
     const totalTiles = Object.values(LETTER_PATTERNS).reduce((total, pattern) =>
@@ -246,28 +345,17 @@ export default function MonadTilesGame() {
 
     return (
         <div className="h-screen flex flex-col bg-background relative">
-            {/* Curseurs des autres joueurs */}
-            {Object.entries(allCursors).map(([cursorUserId, cursor]) => {
-                if (!cursor || cursorUserId === myUserId) return null;
-
-                return (
-                    <div
-                        key={cursorUserId}
-                        className="fixed pointer-events-none z-40"
-                        style={{
-                            left: cursor.clientX,
-                            top: cursor.clientY,
-                            transform: 'translate(-50%, -50%)',
-                            transition: 'all 0.1s linear',
-                        }}
-                    >
-                        <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg" />
-                        <div className="absolute top-6 left-2 px-2 py-1 text-xs font-medium text-white bg-blue-500 rounded shadow-lg whitespace-nowrap">
-                            {getDisplayName(cursorUserId)}
-                        </div>
-                    </div>
-                );
-            })}
+            {/* Curseurs personnalisés avec le composant Cursors */}
+            <Cursors
+                components={{
+                    UserCursor: CustomUserCursor
+                }}
+                getUserColor={getUserColor}
+                transitionDuration={100}
+                throttleDelay={16} // 60 FPS pour un jeu réactif
+                omitMyValue={true} // Ne pas afficher son propre curseur
+                deleteOnLeave={true} // Nettoyer quand les joueurs partent
+            />
 
             {/* Header */}
             <nav className="relative z-10 glass bg-[#200052]">
@@ -360,7 +448,7 @@ export default function MonadTilesGame() {
             <div className="flex-1 flex">
                 {/* Game area */}
                 <div
-                    className="flex-1 bg-[#200052] flex flex-col items-center justify-center p-4 cursor-pointer"
+                    className="flex-1 bg-[#200052] flex flex-col items-center justify-center p-4 cursor-pointer relative"
                     onClick={handleBackgroundClick}
                 >
                     {/* Overlay de bienvenue */}
@@ -393,7 +481,7 @@ export default function MonadTilesGame() {
                                     </button>
                                 </div>
 
-                                <p className="text-s sm:text-sm text-white mt-4">
+                                <p className="text-xs sm:text-sm text-white mt-4">
                                     Work together to flip all MONAD tiles before time runs out!<br />
                                     Connect your wallet to mint victory NFT!
                                 </p>
@@ -427,7 +515,10 @@ export default function MonadTilesGame() {
                     <div className="flex flex-col 2xl:flex-row gap-4 2xl:gap-12 items-center justify-center px-2 overflow-x-auto">
                         {Object.entries(LETTER_PATTERNS).map(([letter, pattern], letterIndex) => (
                             <div key={letter} className="flex flex-col items-center flex-shrink-0">
-                                
+                                {/* Afficher la lettre sur mobile/tablette */}
+                                <div className="text-white font-bold text-lg sm:text-xl mb-2 2xl:hidden">
+                                    {letter}
+                                </div>
                                 <div className="flex flex-col gap-0.5 sm:gap-1">
                                     {pattern.map((row, rowIndex) => (
                                         <div key={rowIndex} className="flex gap-0.5 sm:gap-1">
@@ -466,13 +557,13 @@ export default function MonadTilesGame() {
 
                     {/* Instructions */}
                     <div className="mt-6 sm:mt-8 text-center text-white max-w-2xl px-4">
-                        <p className="mb-2 text-lg sm:text-lg">
+                        <p className="mb-2 text-lg sm:text-base">
                             Work together to flip all MONAD tiles purple before the timer runs out!
                         </p>
-                        <p className="text-lg m:text-lg text-white">
+                        <p className="mb-2 text-lg sm:text-base text-white">
                             Timer resets when it hits zero. Clicking outside resets tiles and timer.
                         </p>
-                        <p className="text-lg sm:text-lg white mt-1">
+                        <p className="mb-2 text-lg sm:text-base text-white">
                             You need teamwork - impossible to do alone in {TIMER_DURATION} seconds!
                         </p>
                     </div>
