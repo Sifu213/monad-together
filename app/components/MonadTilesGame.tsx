@@ -454,7 +454,7 @@ export default function MonadTilesGame() {
                     {/* Overlay de bienvenue */}
                     {!hasUsername && (
                         <div
-                            className="absolute inset-0 flex items-center justify-center z-10 p-4"
+                            className="absolute inset-0 bg-[#200052] bg-opacity-50 flex items-center justify-center z-10 p-4"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="bg-[#836EF9] p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 rounded-lg">
