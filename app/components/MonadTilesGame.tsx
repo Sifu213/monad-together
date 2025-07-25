@@ -58,7 +58,7 @@ interface TileState {
     [key: string]: boolean;
 }
 
-const TIMER_DURATION = 45; // 45 secondes
+const TIMER_DURATION = 30; // 30 secondes de timer
 
 
 interface CustomCursorProps {
