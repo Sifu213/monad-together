@@ -202,8 +202,8 @@ export default function MonadTilesGame() {
 
     // Fonction pour obtenir la couleur de la barre de progression
     const getTimerBarColor = () => {
-        if (gameTimer > 30) return 'bg-green-500';
-        if (gameTimer > 15) return 'bg-yellow-500';
+        if (gameTimer > 20) return 'bg-green-500';
+        if (gameTimer > 10) return 'bg-yellow-500';
         if (gameTimer > 5) return 'bg-orange-500';
         return 'bg-red-500';
     };
