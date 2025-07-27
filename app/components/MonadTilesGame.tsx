@@ -58,8 +58,46 @@ interface TileState {
     [key: string]: boolean;
 }
 
+// Types pour les niveaux NFT
+export type NFTLevel = 1 | 2 | 3;
+
+export interface NFTReward {
+    level: NFTLevel;
+    name: string;
+    color: string;
+    description: string;
+}
+
 const TIMER_DURATION = 30; // 30 secondes de timer
 
+// Configuration des récompenses NFT
+const NFT_REWARDS: Record<NFTLevel, NFTReward> = {
+    3: {
+        level: 3,
+        name: "Lightning Victory",
+        color: "from-yellow-400 to-orange-500",
+        description: "Completed with 20-30s remaining - Legendary speed!"
+    },
+    2: {
+        level: 2,
+        name: "Swift Victory", 
+        color: "from-blue-400 to-purple-500",
+        description: "Completed with 10-20s remaining - Great teamwork!"
+    },
+    1: {
+        level: 1,
+        name: "Clutch Victory",
+        color: "from-green-400 to-teal-500", 
+        description: "Completed with 0-10s remaining - Just in time!"
+    }
+};
+
+// Fonction pour déterminer le niveau NFT basé sur le temps restant
+const determineNFTLevel = (timeRemaining: number): NFTLevel => {
+    if (timeRemaining >= 20) return 3;
+    if (timeRemaining >= 10) return 2;
+    return 1;
+};
 
 interface CustomCursorProps {
     userId: string;
@@ -68,7 +106,6 @@ interface CustomCursorProps {
     transitionDuration?: number;
     getUserColor?: (userId: string) => string;
 }
-
 
 function CustomUserCursor({ 
     userId, 
@@ -149,11 +186,12 @@ export default function MonadTilesGame() {
     const { address, isConnected } = useAccount();
     const { disconnect } = useDisconnect();
 
-    // Game state avec nouveau timer
+    // Game state avec nouveau timer et niveau NFT
     const [tiles, setTiles] = useStateTogether<TileState>('monad-tiles', {});
     const [gameTimer, setGameTimer] = useStateTogether<number>('game-timer', TIMER_DURATION);
     const [gameState, setGameState] = useStateTogether<'playing' | 'victory'>('game-state', 'playing');
     const [showVictoryPopup, setShowVictoryPopup] = useState(false);
+    const [victoryNFTLevel, setVictoryNFTLevel] = useState<NFTLevel | null>(null);
 
     // Chat et utilisateurs
     const [chatMessages, setChatMessages] = useStateTogether<ChatMessage[]>('chat-messages', []);
@@ -256,13 +294,15 @@ export default function MonadTilesGame() {
         }
     }, [gameState, gameTimer]);
 
-    // Vérifier la victoire
+    // Vérifier la victoire et déterminer le niveau NFT
     useEffect(() => {
         if (allTilesFlipped && gameState === 'playing') {
+            const nftLevel = determineNFTLevel(gameTimer);
+            setVictoryNFTLevel(nftLevel);
             setGameState('victory');
             setShowVictoryPopup(true);
         }
-    }, [allTilesFlipped, gameState]);
+    }, [allTilesFlipped, gameState, gameTimer]);
 
     // Fonction pour obtenir le nom d'affichage
     const getDisplayName = (userId: string) => {
@@ -300,6 +340,7 @@ export default function MonadTilesGame() {
         setGameState('playing');
         setGameTimer(TIMER_DURATION);
         setShowVictoryPopup(false);
+        setVictoryNFTLevel(null);
     };
 
     const handleUsernameSubmit = () => {
@@ -312,6 +353,7 @@ export default function MonadTilesGame() {
         }
     };
 
+  
     // Chat
     const sendMessage = () => {
         if (currentMessage.trim() && hasUsername) {
@@ -343,6 +385,9 @@ export default function MonadTilesGame() {
         setChatOpen(false);
     };
 
+    // Obtenir les informations de récompense pour l'affichage
+    const getRewardInfo = (level: NFTLevel) => NFT_REWARDS[level];
+
     return (
         <div className="h-screen flex flex-col bg-background relative">
             {/* Curseurs personnalisés avec le composant Cursors */}
@@ -352,9 +397,9 @@ export default function MonadTilesGame() {
                 }}
                 getUserColor={getUserColor}
                 transitionDuration={100}
-                throttleDelay={16} // 60 FPS pour un jeu réactif
-                omitMyValue={true} // Ne pas afficher son propre curseur
-                deleteOnLeave={true} // Nettoyer quand les joueurs partent
+                throttleDelay={16} 
+                omitMyValue={true} 
+                deleteOnLeave={true} 
             />
 
             {/* Header */}
@@ -374,6 +419,7 @@ export default function MonadTilesGame() {
                         </div>
                         <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
                             <ConnectedUsersDisplay />
+
 
                             {/* Bouton Chat */}
                             {hasUsername && (
@@ -481,10 +527,7 @@ export default function MonadTilesGame() {
                                     </button>
                                 </div>
 
-                                <p className="text-xs sm:text-sm text-white mt-4">
-                                    Work together to flip all MONAD tiles before time runs out!<br />
-                                    Connect your wallet to mint victory NFT!
-                                </p>
+                                
                             </div>
                         </div>
                     )}
@@ -497,7 +540,7 @@ export default function MonadTilesGame() {
                             </div>
                         </div>
                         
-                        {/* Barre de progression du timer */}
+                        {/* Barre de progression du timer avec indicateurs NFT */}
                         <div className="w-full max-w-md mx-auto">
                             <div className="bg-gray-700 rounded-full h-6 relative overflow-hidden">
                                 <div 
@@ -507,7 +550,21 @@ export default function MonadTilesGame() {
                                 <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
                                     {gameTimer}s
                                 </div>
+                                
+                                {/* Indicateurs de niveaux NFT */}
+                                <div className="absolute top-0 left-0 w-full h-full flex items-center">
+                                    {/* Ligne à 20s (66.67%) */}
+                                    <div className="absolute bg-white w-0.5 h-full" style={{ left: '66.67%' }}>
+                                        <div className="absolute -top-6 -left-3 text-xs text-yellow-400"></div>
+                                    </div>
+                                    {/* Ligne à 10s (33.33%) */}
+                                    <div className="absolute bg-white w-0.5 h-full" style={{ left: '33.33%' }}>
+                                        <div className="absolute -top-6 -left-3 text-xs text-blue-400"></div>
+                                    </div>
+                                </div>
                             </div>
+                            
+                           
                         </div>
                     </div>
 
@@ -515,10 +572,7 @@ export default function MonadTilesGame() {
                     <div className="flex flex-col 2xl:flex-row gap-4 2xl:gap-12 items-center justify-center px-2 overflow-x-auto">
                         {Object.entries(LETTER_PATTERNS).map(([letter, pattern], letterIndex) => (
                             <div key={letter} className="flex flex-col items-center flex-shrink-0">
-                                {/* Afficher la lettre sur mobile/tablette */}
-                                <div className="text-white font-bold text-lg sm:text-xl mb-2 2xl:hidden">
-                                    {letter}
-                                </div>
+                                
                                 <div className="flex flex-col gap-0.5 sm:gap-1">
                                     {pattern.map((row, rowIndex) => (
                                         <div key={rowIndex} className="flex gap-0.5 sm:gap-1">
@@ -566,54 +620,87 @@ export default function MonadTilesGame() {
                         <p className="mb-2 text-lg sm:text-base text-white">
                             You need teamwork - impossible to do alone in {TIMER_DURATION} seconds!
                         </p>
+                        <p className="mb-2 text-sm text-purple-300">
+                            <strong>Faster completion = Better NFT rewards!</strong>
+                        </p>
                     </div>
 
-                    {/* Popup de victoire */}
-                    {showVictoryPopup && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    {/* Popup de victoire avec niveau NFT */}
+                    {showVictoryPopup && victoryNFTLevel && (
+                        <div className="fixed inset-0 bg-[#200052] bg-opacity-50 flex items-center justify-center z-50 p-4">
                             <div
                                 className="bg-[#836EF9] rounded-lg p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 w-full"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">🎉 VICTORY! 🎉</h2>
-                                <p className="text-white mb-6 text-sm sm:text-base">
-                                    Amazing teamwork! You successfully flipped all MONAD tiles before time ran out!
-                                </p>
+                                {(() => {
+                                    const reward = getRewardInfo(victoryNFTLevel);
+                                    return (
+                                        <>
+                                            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                                                VICTORY!
+                                            </h2>
+                                            
+                                            {/* Affichage du niveau NFT avec animation */}
+                                            <div className={`bg-[#0d0021] rounded-lg p-4 mb-4 transform animate-pulse`}>
+                                                
+                                                <div className="text-xl font-bold text-white">{reward.name}</div>
+                                                <div className="text-sm text-white opacity-90">{reward.description}</div>
+                                                <div className="mt-2">
+                                                    <div className="flex justify-center gap-1">
+                                                        {Array.from({ length: 3 }).map((_, i) => (
+                                                            <span 
+                                                                key={i} 
+                                                                className={`text-xl ${i < victoryNFTLevel ? 'text-yellow-300' : 'text-gray-400'}`}
+                                                            >
+                                                                ⭐
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                <div
-                                    className="space-y-4 mb-6"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <NFTMintButton
-                                        onMintSuccess={(txHash) => {
-                                            console.log('NFT minted!', txHash);
-                                        }}
-                                        onMintError={(error) => {
-                                            console.error('Mint failed:', error);
-                                        }}
-                                    />
-                                </div>
+                                            <p className="text-white mb-6 text-sm sm:text-base">
+                                                Amazing teamwork! You completed the challenge with <strong>{gameTimer} seconds</strong> remaining!
+                                            </p>
 
-                                <div className="flex gap-2 sm:gap-4 justify-center flex-wrap">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            startNewGame();
-                                        }}
-                                        className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold text-sm sm:text-base"
-                                    >
-                                        New Game
-                                    </button>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            closeVictoryPopup();
-                                        }}
-                                        className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
+                                            <div
+                                                className="space-y-4 mb-6"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <NFTMintButton
+                                                    nftLevel={victoryNFTLevel}
+                                                    onMintSuccess={(txHash) => {
+                                                        console.log('NFT minted!', txHash);
+                                                    }}
+                                                    onMintError={(error) => {
+                                                        console.error('Mint failed:', error);
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div className="flex gap-2 sm:gap-4 justify-center flex-wrap">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        startNewGame();
+                                                    }}
+                                                    className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold text-sm sm:text-base"
+                                                >
+                                                    New Game
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        closeVictoryPopup();
+                                                    }}
+                                                    className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
+                                                >
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
                     )}

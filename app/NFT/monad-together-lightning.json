@@ -1,5 +1,5 @@
 {
-  "name": "Monad Together NFT",
+  "name": "Monad Together Lightning NFT",
   "description": "A commemorative NFT celebrating your victory in Monad Together!",
   "image": "ipfs://bafkreibywd2qrk2aamrnaocp3gock525bugbx7p4zrjct5edfvdnpngyyy",
   "external_url": "https://monad-together.vercel.app/",
@@ -22,7 +22,7 @@
     },
     {
       "trait_type": "Rarity",
-      "value": "Achievement"
+      "value": "Legendary"
     }
   ]
 }

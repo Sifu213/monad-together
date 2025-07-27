@@ -1,0 +1,28 @@
+{
+  "name": "Monad Together Swift NFT",
+  "description": "A commemorative NFT celebrating your victory in Monad Together!",
+  "image": "ipfs://bafkreie3ji4p6wzlpa7osqfnx4vy2r2b22ysteetnlf4wdhncdwile6wye",
+  "external_url": "https://monad-together.vercel.app/",
+  "attributes": [
+    {
+      "trait_type": "Game",
+      "value": "Monad Together"
+    },
+    {
+      "trait_type": "Achievement", 
+      "value": "Victory"
+    },
+    {
+      "trait_type": "Blockchain",
+      "value": "Monad Testnet"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Collaborative Game NFT"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    }
+  ]
+}
