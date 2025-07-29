@@ -13,10 +13,10 @@ export default function ReactTogetherWrapper({
   const sessionParams = {
     appId:
       process.env.NEXT_PUBLIC_DEFAULT_APP_ID ||
-      "io.multisynq.monad-together",
+      "io.multisynq.monad-togetherlocal",
     apiKey: process.env.NEXT_PUBLIC_MULTISYNQ_API_KEY || "20Ovt2JGkI7CdZQZnZDBLr9sq7x7KwWxEOYuBSrK1C",
-    name: process.env.NEXT_PUBLIC_DEFAULT_SESSION_NAME || "default-session2",
-    password: process.env.NEXT_PUBLIC_DEFAULT_SESSION_PASSWORD || "demo123ddssvcdfsfd",
+    name: process.env.NEXT_PUBLIC_DEFAULT_SESSION_NAME || "",
+    password: process.env.NEXT_PUBLIC_DEFAULT_SESSION_PASSWORD || "",
   };
 
   return (

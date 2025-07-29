@@ -189,7 +189,8 @@ export default function MonadTilesGame() {
     // Game state avec nouveau timer et niveau NFT
     const [tiles, setTiles] = useStateTogether<TileState>('monad-tiles', {});
     const [gameTimer, setGameTimer] = useStateTogether<number>('game-timer', TIMER_DURATION);
-    const [gameState, setGameState] = useStateTogether<'playing' | 'victory'>('game-state', 'playing');
+    // ✅ CHANGEMENT CRUCIAL: gameState n'est PLUS synchronisé - chaque joueur gère sa propre popup
+    const [gameState, setGameState] = useState<'playing' | 'victory'>('playing');
     const [showVictoryPopup, setShowVictoryPopup] = useState(false);
     const [victoryNFTLevel, setVictoryNFTLevel] = useState<NFTLevel | null>(null);
 
@@ -279,7 +280,8 @@ export default function MonadTilesGame() {
 
     // Timer principal du jeu
     useEffect(() => {
-        if (gameState === 'playing' && gameTimer > 0) {
+        // ✅ Le timer fonctionne toujours, peu importe l'état local de gameState
+        if (gameTimer > 0) {
             const interval = setInterval(() => {
                 setGameTimer(prev => {
                     if (prev <= 1) {
@@ -292,17 +294,26 @@ export default function MonadTilesGame() {
             }, 1000);
             return () => clearInterval(interval);
         }
-    }, [gameState, gameTimer]);
+    }, [gameTimer, setGameTimer, setTiles]);
 
     // Vérifier la victoire et déterminer le niveau NFT
     useEffect(() => {
-        if (allTilesFlipped && gameState === 'playing') {
+        // ✅ Chaque joueur vérifie individuellement s'il doit voir la popup
+        if (allTilesFlipped && !showVictoryPopup) {
             const nftLevel = determineNFTLevel(gameTimer);
             setVictoryNFTLevel(nftLevel);
             setGameState('victory');
             setShowVictoryPopup(true);
+            
+            // ✅ AUTO-RESTART: Reset automatique des tuiles après 5 secondes
+            // Cela permet aux nouveaux joueurs de commencer immédiatement
+            setTimeout(() => {
+                setTiles({}); // Reset des tuiles partagées
+                setGameTimer(TIMER_DURATION); // Reset du timer partagé
+                // On ne change pas gameState local - chaque joueur garde sa popup
+            }, 5000); // 5 secondes pour voir la victoire
         }
-    }, [allTilesFlipped, gameState, gameTimer]);
+    }, [allTilesFlipped, showVictoryPopup, gameTimer, setTiles, setGameTimer]);
 
     // Fonction pour obtenir le nom d'affichage
     const getDisplayName = (userId: string) => {
@@ -317,30 +328,38 @@ export default function MonadTilesGame() {
 
     // Handlers
     const handleTileClick = (tileKey: string) => {
-        if (!hasUsername || gameState !== 'playing') return;
-        setTiles(prev => ({
-            ...prev,
-            [tileKey]: !prev[tileKey]
-        }));
+        // ✅ Les joueurs peuvent cliquer même si leur popup est ouverte
+        if (!hasUsername) return;
+        
+        // Solution temporaire : délai aléatoire pour éviter les conflits multijoueurs
+        const delay = Math.random() * 100; // 0-100ms
+        
+        setTimeout(() => {
+            setTiles(prev => ({
+                ...prev,
+                [tileKey]: !prev[tileKey]
+            }));
+        }, delay);
     };
 
     const handleBackgroundClick = () => {
-        if (!hasUsername || gameState !== 'playing') return;
-        // Reset les tuiles et redémarre le timer
+        if (!hasUsername) return;
+        // ✅ Reset fonctionne toujours
         setTiles({});
         setGameTimer(TIMER_DURATION);
     };
 
     const closeVictoryPopup = () => {
         setShowVictoryPopup(false);
+        setGameState('playing'); // ✅ Retour en mode jeu pour ce joueur uniquement
     };
 
     const startNewGame = () => {
         setTiles({});
-        setGameState('playing');
         setGameTimer(TIMER_DURATION);
         setShowVictoryPopup(false);
         setVictoryNFTLevel(null);
+        setGameState('playing'); // ✅ Reset local
     };
 
     const handleUsernameSubmit = () => {
@@ -353,7 +372,8 @@ export default function MonadTilesGame() {
         }
     };
 
-  
+   
+
     // Chat
     const sendMessage = () => {
         if (currentMessage.trim() && hasUsername) {
@@ -420,6 +440,7 @@ export default function MonadTilesGame() {
                         <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
                             <ConnectedUsersDisplay />
 
+                            
 
                             {/* Bouton Chat */}
                             {hasUsername && (
@@ -627,7 +648,7 @@ export default function MonadTilesGame() {
 
                     {/* Popup de victoire avec niveau NFT */}
                     {showVictoryPopup && victoryNFTLevel && (
-                        <div className="fixed inset-0 bg-[#200052] bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                             <div
                                 className="bg-[#836EF9] rounded-lg p-6 sm:p-8 text-center max-w-sm sm:max-w-md mx-4 w-full"
                                 onClick={(e) => e.stopPropagation()}
@@ -637,11 +658,11 @@ export default function MonadTilesGame() {
                                     return (
                                         <>
                                             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                                                VICTORY!
+                                                🎉 VICTORY! 🎉
                                             </h2>
                                             
                                             {/* Affichage du niveau NFT avec animation */}
-                                            <div className={`bg-[#0d0021] rounded-lg p-4 mb-4 transform animate-pulse`}>
+                                            <div className={`bg-gradient-to-r ${reward.color} rounded-lg p-4 mb-4 transform animate-pulse`}>
                                                 
                                                 <div className="text-xl font-bold text-white">{reward.name}</div>
                                                 <div className="text-sm text-white opacity-90">{reward.description}</div>
@@ -660,7 +681,8 @@ export default function MonadTilesGame() {
                                             </div>
 
                                             <p className="text-white mb-6 text-sm sm:text-base">
-                                                Amazing teamwork! You completed the challenge with <strong>{gameTimer} seconds</strong> remaining!
+                                                Amazing teamwork! You completed the challenge !
+                                                
                                             </p>
 
                                             <div
@@ -682,21 +704,13 @@ export default function MonadTilesGame() {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        startNewGame();
+                                                        closeVictoryPopup();
                                                     }}
                                                     className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold text-sm sm:text-base"
                                                 >
-                                                    New Game
+                                                    Continue Playing
                                                 </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        closeVictoryPopup();
-                                                    }}
-                                                    className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
-                                                >
-                                                    Close
-                                                </button>
+                                                
                                             </div>
                                         </>
                                     );
